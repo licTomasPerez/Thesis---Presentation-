@@ -1,0 +1,929 @@
+\documentclass[fleqn]{beamer}
+\usepackage[spanish]{babel}
+\newtheorem{post}{Postulado}
+\usepackage{xcolor}
+
+\usepackage{physics}
+\usepackage{dsfont}
+\usepackage{cite} 
+\usepackage{amsmath,amssymb}
+
+%\usepackage[demo]{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
+
+\usepackage{comment}
+\excludecomment{Omitir}
+% vertical separator macro
+\newcommand{\vsep}{
+  \column{0.0\textwidth}
+    \begin{tikzpicture}
+      \draw[very thick,black!10] (0,0) -- (0,7.3);
+    \end{tikzpicture}
+}
+% More space between lines in align
+\setlength{\mathindent}{0pt}
+
+% Beamer theme
+\usetheme{ZMBZFMK}
+\usefonttheme[onlysmall]{structurebold}
+\mode<presentation>
+%\setbeamercovered{transparent=10}
+
+% align spacing
+\setlength{\jot}{0pt}
+
+\AtBeginSection[]
+{
+  \begin{frame}
+    \frametitle{Índice de Contenidos}
+    \tableofcontents[currentsection]
+  \end{frame}
+}
+%\AtBeginSubsection[]
+%{
+%  \begin{frame}
+%    \frametitle{Table of Contents}
+%    \tableofcontents[currentsubsection]
+%  \end{frame}
+%}
+
+% Only the first Slide
+\title{Simulación eficiente de dinámicas nomarkovianas mediante estados Max-Ent}
+\subtitle{Defensa de Trabajo de Diploma \\
+para acreditar el Título de Lic. en Física}
+\author{Tomás Pérez}
+\institute[Facultad de Ciencias Exactas - Universidad Nacional de La Plata]{ Director: Dr. Juan Mauricio Matera \\
+Asesora Académica: Dra. Norma Canosa \\
+Mesa conformada por el Dr. Matera, la Dra. Canosa y la Dra. Marta Reboiro.
+}
+\date{21 de diciembre de 2021}
+
+% Portada
+\setcounter{tocdepth}{2}
+\begin{document}
+\begin{frame}
+  \titlepage
+\end{frame}
+
+% Índice
+\begin{frame}{Índice}
+    \tableofcontents
+\end{frame}
+
+%Frame1
+\section{Objetivo y Planteo del Problema}
+\begin{frame}{Planteo del Problema}
+En el presente trabajo buscamos describir la dinámica de un sistema cuántico compuesto de múltiples subcomponentes mediante su operador densidad, sistemas de carácter \textbf{no markoviano}.\\
+
+Cómo explicaremos más adelante, resolver analíticamente esta dinámica en sistemas de muchas partículas interactuantes puede no ser posible debido a la excesiva complejidad de dicho objeto al incluir correlaciones de muchos cuerpos. A tal fin se evaluaron la aplicabilidad de distintos formalismos no markovianos.
+\end{frame}
+
+%Frame2
+\section{Introducci\'on a la Teor\'ia de la Info. Cu\'antica}
+%\subsection{Postulados y Conceptos Importantes}
+\begin{frame}
+\frametitle{Postulados y Conceptos Importantes}
+    La investigación de la dinámica de sistemas cuánticos es fundamental para la comprensión y modelado de los fenómenos a escala nanoscópica, siendo especialmente relevante en los campos de estudio de
+    \begin{itemize}
+      \item Medicina,
+      \item Comunicaciones,
+      \item Física Atómica y Molecular
+      \item y en Física de la Materia Condensada.
+    \end{itemize}
+\end{frame}
+
+%frame3
+%\subsubsection{Postulado 1: Topología}
+\begin{frame}
+\frametitle{Sobre el espacio de Estados}
+Primero hemos de establecer una estructura algebraica para la teoría, lo que da origen a este primer postulado
+
+    \begin{post}    
+Sea un sistema físico aislado, existe un espacio vectorial complejo asociado, provisto de un producto interno; el cual es completo y separable un espacio de Hilbert denotado por $\mathbb{H}$. En este espacio se encuentran todos los \textbf{vectores de estado} que caracterizan el sistema. Diremos que $\mathbb{H}$ es el \textbf{espacio de estados}.
+    \end{post}
+\end{frame}
+
+%frame5
+\begin{frame}
+\frametitle{Sobre el espacio de Estados}
+En esta teoría se introduce a la \textbf{matriz densidad} u \textbf{operador densidad}, denotado por $\rho$, el cual caracterizará completamente el estado del sistema. 
+
+Este operador densidad $\rho$ es un operador hermítico, de traza unimodular y con todos sus autovalores no negativos; esto es
+
+$$
+    \rho^{\dagger} = \rho, \textnormal{ Tr} \rho = 1 \textnormal{ y } \rho \geq 0.
+$$
+\end{frame}
+
+%frame6
+\begin{frame}
+\frametitle{Sobre el espacio de Estados}
+
+Este espacio de estados tiene dos propiedades importantes:
+
+\begin{itemize}[<+->]
+      \item El conjunto de todos los estados densidad $\mathcal{S}$ es un conjunto convexo puesto que por lo que dadas cualesquiera matrices densidad $\rho_1, \rho_2$ luego $\rho = \lambda\rho_1+ (1-\lambda)\rho_2, \textnormal{ } \lambda \in \mathbb{R}_{[0,1]}$ también es un estado densidad.
+      \item Es una variedad Riemanniana, con un producto interno dado por $\langle\mathbf{O},\mathbf{Q}\rangle_{HS} = \textnormal{Tr}\mathbf{O}^{\dagger}\mathbf{Q}$, para cualesquiera dos operadores ${\bf O}, {\bf Q} \in \mathcal{S}$. 
+%Esto es $(\mathcal{S}, \langle\rangle_{HS})$ es una variedad Riemanniana
+    \end{itemize}
+\end{frame}
+
+%frame7
+%\subsubsection{Postulado 2: Medidas}
+\begin{frame}
+\frametitle{Sobre la medida}
+
+¿Cómo obtenemos resultados en un experimento?
+
+Para responder esta interrogante, surge el siguiente postulado
+
+    \begin{post}  Las medidas cuánticas están descriptas por un conjunto de operadores de medida $\{M_m\}$ las cuales cumplen que $\sum_{m} M_m^{\dagger}M_m = \mathds{1}$. Si el sistema se encuentra en el estado inicial $\rho$, la probabilidad de obtener como resultado de la medida el valor $m$ está dado por 
+\begin{equation}
+    p(m) = \textnormal{Tr} (M_m^{\dagger}M_m \rho).
+\end{equation}
+
+El estado final del sistema será  $\rho' = \frac{M_{m*} \rho M_{m*}^{\dagger}}{p(m^{*})}$, siendo $m^*$ el resultado obtenido después de la medida. Adicionalmente, las probabilidades $p(m)$ están normalizadas $\sum_m p(m) = 1$.
+\end{post}
+\end{frame}
+
+%frame8
+%\subsubsection{Postulado 3: Sistemas con subcomponentes}
+\begin{frame}
+\frametitle{Sobre sistemas compuestos}
+
+La gran mayoría de sistemas físicos a describir disponen de múltiples componentes, por lo que es necesario incluir en nuestro formalismo, técnicas para su tratamiento; surgiendo el siguiente postulado. 
+
+\begin{post}  
+Dado un sistema global, el cual pueda ser descompuesto en subsistemas $1,2,\ldots,$ con espacios de Hilbert asociados $\mathbb{H}_1$, $\mathbb{H}_2 \ldots$, este tendrá un espacio de Hilbert compuesto $\mathbb{H} = \mathbb{H}_1 \otimes \mathbb{H}_2 \otimes \ldots$. Una medida que actúa sobre el $n$-ésimo subespacio es unívocamente representado por el operador $ \mathds{M}_n = \mathds{1}_1 \otimes \cdots \otimes \mathcal{M}_n^{(s)} \otimes \cdots $ en el espacio de Hilbert compuesto, donde $\mathcal{M}_n^{(s)}$ es un operador local al $s$-ésimo subsistema. 
+\end{post}
+\end{frame}
+
+%frame9
+\begin{frame}
+\frametitle{Entropía y Entrelazamiento}
+
+Se define la \textbf{entropía de von Neumann} de un sistema cuántico en un estado $\rho$  como 
+
+\begin{equation}
+S(\rho) = - \textnormal{Tr} \rho \log \rho = - \sum_i p_i \log p_i,
+\end{equation}
+ 
+para un estado descompuesto como $\rho=\sum_i p_i |{\psi_i}\rangle\langle{\psi_i}|$.
+
+La entropía de von Neumann es una medida de la falta de información asociada al estado $\rho$.
+\end{frame}
+
+%frame10
+\begin{frame}
+\frametitle{Entropía, Fidelidad y Entrelazamiento}
+Otra cantidad muy importante es la \textbf{entropía relativa} entre estados
+    
+\begin{equation}
+S(\rho||\sigma)=- \textnormal{Tr} \rho(\log \sigma-\log \rho),
+\end{equation}
+
+que también se anula para $\rho=\sigma$ una propiedad de monotonía:
+\begin{equation}
+S({\mathcal E}(\rho)||{\mathcal E}(\sigma))\leq S(\rho||\sigma),
+\end{equation}
+
+La entropía relativa es una cantidad que no es simétrica, y por lo tanto no admite una interpretación en términos de una medida de distancia.
+
+Se anula para $\rho=\sigma$ y es una cantidad no acotada, que diverge cuando ambos estados tienen soportes distintos, esto es, cuando existe una medida proyectiva que distingue  \emph{con certeza} ambos estados. 
+\end{frame}
+
+%frame10.bis
+\begin{frame}{Entropía, Fidelidad y Entrelazamiento}
+   
+Se define la \textbf{fidelidad}  como una medida de la distancia entre dos estados cuánticos, dada por
+\begin{equation}
+    F(\rho,\rho') = \textnormal{Tr} \sqrt{\rho^{1/2}\rho' \rho^{1/2}}.
+    \label{fidelity}
+\end{equation}
+%En particular, para estados puros $\rho = \ket{\psi} \bra{\psi}$ y $\rho' = \ket{\psi'}\bra{\psi'}$, $F(\rho,\rho')$ se reduce al módulo del \textit{overlap} entre dichos estados: $F(\rho,\rho') = |\bra{\psi}\ket{\psi}|$.
+Se cumple que la fidelidad es un número entre $0$ y $1$, 
+$$
+0 \leq F \leq 1,
+$$
+
+donde el caso límite $F(\rho,\rho')=1$ se da \textit{sii} $\rho = \rho'$ mientras que $F(\rho,\rho')=0$ se da \textit{sii} $\rho \textnormal{ y } \rho'$ tienen soportes ortogonales. La fidelidad, \textit{per sé}, no es una métrica al no cumplir con la desigualdad triangular. 
+
+Sin embargo, la \textbf{medida de Bures-Wooters} sí es una métrica, la cual está definida en términos de la fidelidad, a saber
+\begin{equation}
+    B(\rho,\rho') = \textnormal{arccos} F(\rho,\rho').
+\end{equation}
+\end{frame}
+
+%frame11
+\begin{frame}
+\frametitle{Entropía, Fidelidad y Entrelazamiento}
+
+Sea un sistema de dos componentes, $A$ y $B$. Los estados más simples en un espacio de Hilbert compuesto son los \textbf{estados producto} de estados puros: 
+\begin{equation}
+    \rho = \sum_{i} p_i \rho^{(A)}_i \otimes \rho^{(B)}_i. 
+    \label{unentangled}
+\end{equation}
+
+%donde los estados $\rho^{(A)}_i$ y $\rho^{(B)}_i $ son estados puros en uno de los subsistemas. 
+
+Luego, una forma de preparar $\rho$ es introduciendo una variable aleatoria clásica $\mathbf{X}$ inducida por la distribución de probabilidad $p$. 
+
+En tales condiciones, \eqref{unentangled} es un estado \textbf{separable} o \textbf{clásicamente correlacionado}. \end{frame}
+
+%frame12
+\begin{frame}
+\frametitle{Entropía, Fidelidad y Entrelazamiento} 
+
+Para estos estados, el valor medio de cualquier producto de observables sobre diferentes sistemas se expresa como
+$$\langle{\bf O}_A \otimes {\bf O}_B \rangle \neq \sum_k \langle {\bf O}_A \otimes \mathds{1}_{B} \rangle _{k}\langle \mathds{1}_{A} \otimes {\bf O}_B \rangle_k $$
+
+Diremos que un estado cuántico está \textbf{entrelazado} si no separable.
+\end{frame}
+
+%frame13
+\begin{frame}
+\frametitle{Evolución con el tiempo}
+
+Al evolucionar distintos sistemas, encontramos dos clases de evoluciones
+
+\begin{itemize}[<+->]
+      \item Evoluciones cerradas: la evolución depende de sus grados de libertad internos en forma determinista. Está regida por la \textbf{Ecuación de Schr\"odinger}
+      \item Evoluciones abiertas: la evolución se ve afectada interacciones con un \textbf{entorno} por lo que los grados de libertad del sistema principal se acoplan a otros grados de libertad no incluidos en la descripción. Está regida por la llamada \textbf{Ecuación de Lindblad}
+    \end{itemize}
+%Esto es, no hay interacciones con grados de libertad externos al sistema. 
+%En contraste, un sistema es \textbf{abierto} si su evolución no cumple con esta propiedad.
+%En un sistema cerrado, la simetría ante traslaciones en el tiempo implica que la evolución del estado está definida por la Ecuación de Sch\"odinger
+\end{frame}
+
+%frame14
+%\subsubsection{Postulado 4: Evoluciones temporales}
+\begin{frame}
+\frametitle{Sobre la evolución cerrada}
+
+\begin{post}  La evolución de un sistema $cerrado$ \textnormal{ie.} aquel sistema que no interactúa con su exterior, es descripta por una transformación unitaria 
+
+\begin{equation}
+    \Tilde{\rho} = \mathcal{U} \rho \mathcal{U}^{\dagger}.
+\end{equation}
+
+ Adicionalmente, la dinámica temporal del estado está dada por la ecuación de Schrödinger-Liouville-von Neumann 
+ \begin{equation}
+     {\bf i}\hbar \frac{d\rho}{dt} = [\mathbf{H},\rho],
+ \end{equation}
+  siendo $\mathbf{H}$ el Hamiltoniano del sistema
+\end{post}
+\end{frame}
+
+%frame15
+\begin{frame}
+\frametitle{Sobre la evolución abierta}
+En una evolución abierta, el resultado de dicho acoplamiento es la introducción de efectos no deterministas en la evolución. Dichas evoluciones temporales no son, en general, unitarias requiriendo una nueva formulación de la mecánica cuántica. Si podemos asumir que a pesar de no ser determinista, la evolución es continua, será posible modelarla (bajo ciertas condiciones) en términos de la \textbf{ecuación de Lindblad}.
+\end{frame}
+
+%frame16
+\begin{frame}
+\frametitle{Ecuación de Lindblad}
+
+La ecuación de Lindblad está dada por
+
+\begin{equation}
+    \frac{d\rho}{dt} = -\frac{i}{\hbar}[\mathbf{H},\rho]+\sum_{i}\bigg(\mathbf{C}_i \rho \mathbf{C}_i^{\dagger}-\frac{\{\mathbf{C}_i^{\dagger}\mathbf{C}_i,\rho\}}{2}\bigg),
+\end{equation}
+
+donde $\mathbf{H}$ es el Hamiltoniano efectivo del sistema dado por 
+
+\begin{equation*}
+\mathbf{H}(t)= \mathbf{H}_S \otimes \mathds{1}_E + \mathds{1}_S \otimes \mathbf{H}_E + \mathbf{H}_I (t),
+\end{equation*}
+
+y donde los $\mathbf{C}_i$ son los \textbf{operadores de colapso} que modelan procesos incoherentes. 
+
+%Tiene dos términos: el primero, el conmutador con el operador $\mathbf{H}$ -el Hamiltoniano efectivo del sistema- corresponde a la evolución unitaria mientras que los términos que involucran a los \textbf{operadores de colapso} $\mathbf{C}_i$ corresponden a procesos incoherentes. 
+
+%El Hamiltoniano del sistema puede ser construido teniendo en cuenta las simetrías del sistema mientras que la elección de operadores de colapso dependerá de la dinámica incoherente a modelar. A modo de ejemplo, para modelar un decaimiento espontáneo de un sistema en un estado inicial $\ket{i}$ a un estado final $\ket{f}$ corresponde tomar un operador de colapso $\mathbf{C}_i = \sqrt{\Gamma} \ket{f}\bra{i}$, donde $\Gamma$ es la \textit{probabilidad de transición por unidad de tiempo}.
+\end{frame}
+
+%frame16
+\begin{frame}
+\frametitle{Sobre la evolución abierta}
+
+¿Cuales son sus condiciones de validez?
+
+\begin{itemize}[<+->]
+      \item \textbf{Positividad completa}: las transformaciones deber ser tales que si el sistema es parte de un sistema compuesto, el estado global evolucionado continúe siendo un estado, independientemente del estado inicial del sistema compuesto.
+      \item \textbf{Continuidad}: Adicionalmente, al construir una ecuación maestra se asume otra hipótesis: se asume que la evolución es \textbf{continua}, es decir $\rho(t)$ es una función continua y diferenciable a todo tiempo.
+      \item \textbf{Markovianidad}.
+    \end{itemize}
+\end{frame}
+
+%frame17
+\begin{frame}
+\frametitle{Sistemas Markovianos}
+    
+Sabemos que $\rho(t)$ y su dinámica está regida por una ecuación diferencial de primer orden. Luego $\rho(t_0)$ a $t_0$ es suficiente para determinar $\rho(t), \forall t>t_0$. 
+
+% este es un requerimiento no trivial puesto que el sistema interactúa con el entorno, entonces el estado del entorno a tiempo t0 depende del ρ(t') a t'<t0
+    
+El entorno adquiere información sobre el sistema y dicha información puede volver a, al menos, alguna componente del sistema. Por tanto, si solo se conoce $\rho(t_0)$ - en general - será imposible e insuficiente para determinar $\rho(t)$, a tiempos posteriores.
+\end{frame}
+
+%frame18
+\begin{frame}
+\frametitle{Sistemas Markovianos}
+
+La aproximación Markoviana consiste en asumir que el entorno carece de memoria, esto es $\rho(t)$ esencialmente no se ve afectado por la historia del sistema. 
+
+%El flujo de información es uni-direccional: sistema ---> entorno. 
+
+Esta aproximación provee de un excelente formalismo para ruido cuántico si la memoria de cualquier efecto del sistema global sobre el entorno es mucho menor a la escala de tiempo de la dinámica en su conjunto. 
+\end{frame}
+
+%frame19
+%\subsection{Dinámicas Gaussianas}
+\begin{frame}
+\frametitle{Aproximación Gaussiana}
+
+Surge la necesidad de describir sistemas no markovianos, con correlaciones no negligibles a largos plazos. 
+
+\begin{itemize}[<+->]
+    \item Teorías de campo medio
+\item Tensor networks
+\item Mapeos bosónicos
+\item \textbf{Dinámicas gaussianas} 
+\item \textbf{Aproximación Max-Ent}
+\end{itemize}
+\end{frame}
+
+%frame20
+\begin{frame}
+\frametitle{Aproximación Gaussiana}
+Las dinámicas gaussianas son realizables en sistemas bosónicos/fermiónicos compuestos por modos bosónicos/fermiónicos y son 	cerradas. 
+Estas son parametrizables en términos de las 	correlaciones de pares. 
+
+\begin{figure}
+    \centering
+    \includegraphics[scale = 0.5]{Aproximacion Gaussiana.png}
+\end{figure}
+\end{frame}
+
+\section{Din\'amica Gaussiana en un sistema de dos bosones}
+%\subsection{Dinámica Cerrada}
+%frame21
+\begin{frame}
+\frametitle{Dinámica Cerrada}
+
+%{ \color{red} ``Dinámica gaussiana en'' en lugar de  ``{Estudio \textit{ab initio} de'' }
+Sea un sistema conformado por dos subsistemas de carácter bosónico: un primer sistema $A$, un átomo, y un subsistema $B$, una cavidad electromagnética. El sistema conjunto se encuentra regido por un Hamiltoniano que acopla dichos subsistemas:
+
+\begin{equation}
+    \mathbf{H} = \omega_1 {\bf a}^{\dagger}{\bf a} + \omega_2 {\mathbf b}^{\dagger}{\mathbf b} + \lambda({\bf a}^{\dagger}{\mathbf b}+ {\mathbf b}^{\dagger}{\bf a}),
+    \label{model3.1_hamiltonian}
+\end{equation}
+
+Este puede ser diagonalizado y desacoplado en términos de sus modos bosónicos normales ${\bf h} = P\tilde{\bf h}P^{-1}$
+\end{frame}
+
+%frame22
+\begin{frame}
+\frametitle{Dinámica Cerrada}
+
+\begin{equation}
+    \tilde{\bf h} = \left(\begin{array}{cc}
+    \Omega_1 & 0  \\
+    0 &  \Omega_2
+    \end{array}\right), \textnormal{ donde } \Omega_{\pm} = \frac{\omega_1 + \omega_2}{2} + \Delta,  
+\end{equation}
+
+donde $\Delta =\sqrt{\left(\frac{\omega_1-\omega_2}{2}\right)^2 + |\lambda|^2}$. Por otro lado, la matriz de cambio de base $P$ está dada por
+
+\begin{equation}
+\small
+    P = \frac{1}{2\lambda\mathcal{N}} \left(\begin{array}{cc}
+        -{\sqrt{(\omega_1 - \omega_2)^2+4\lambda^2}-\omega_1 + \omega_2} &  {\sqrt{(\omega_1 - \omega_2)^2+4\lambda^2}+\omega_1 - \omega_2}\\
+      {2\lambda}  & {2\lambda}
+    \end{array}\right)
+\end{equation}
+
+donde $\mathcal{N} = \sqrt{\frac{1}{4}\left(\frac{\omega_2 - \omega_1 +\sqrt{(\omega_1 - \omega_2)^2+4\lambda^2}}{\lambda}\right)^2 + 1} $ es la constante de normalización. 
+\end{frame}
+
+%frame23
+\begin{frame}
+\frametitle{Dinámica Cerrada}
+    Esta matriz de cambio de base $P$ unitaria inducirá naturalmente un cambio en la definición de los operados bosónicos en términos de un nuevo set de operadores.
+    
+    \begin{equation}
+     \left( \begin{array}{c}
+        \tilde{\bf a}^{\dagger} \\
+         \tilde{\mathbf b}^{\dagger} 
+    \end{array} \right) = \left(\begin{array}{c}
+        P_{11} {\bf a}^{\dagger} +  P_{21}{\mathbf b}^{\dagger} \\
+        P_{12} {\bf a}^{\dagger} + P_{22} {\mathbf b}^{\dagger}
+    \end{array}\right)
+    \label{model3.1_new basis}
+\end{equation}
+
+En consecuencia, 
+
+\begin{equation}
+    \mathbf{H} = \Omega_+ \tilde{\bf a}^{\dagger}\tilde{\bf a} + \Omega_- \tilde{\mathbf b}^{\dagger}\tilde{\mathbf b},
+\end{equation}
+\end{frame}
+
+%\subsubsection{Evolución de un estado Gaussiano}
+
+\begin{frame}{Evolución de un estado Gaussiano}
+
+Ahora estudiaremos la evolución cerrada de un estado gaussiano inicialmente descorrelacionado con el Hamiltoniano anterior. 
+
+\begin{equation}
+    \rho(0) = \frac{e^{-{\bf K}(0)}}{\textnormal{Tr} e^{-{\bf K}(0)}},
+\end{equation}
+
+donde ${\bf K}(0) = \beta_{A}(0){\bf a}^{\dagger} {\bf a} + \beta_{B}(0) {\mathbf b}^{\dagger}{\mathbf b}$ es una forma cuadrática afín en los operadores bosónicos canónicos. Al evolucionar el sistema tendremos que
+
+\begin{equation}
+    \rho(t) = \frac{e^{-{\bf K}(t)}}{\textnormal{Tr} e^{-{\bf K}(t)}},
+\end{equation}
+
+donde ${\bf K} (t) = e^{-i{\bf H}t} {\bf K}(0)e^{i{\bf H}t}$.
+
+\end{frame}
+
+%frame25
+\begin{frame}{Evolución de un estado Gaussiano}
+   
+Expresamos entonces el valor medio de ${\bf n}_1={\mathbf a}^\dagger{\mathbf a}$ como
+
+\begin{equation}
+\langle{\bf n}_1\rangle= w_{11}^2 \langle \tilde{\tilde{\mathbf a}}^\dagger \tilde{\tilde{\mathbf a}}\rangle + |w_{12}|^2
+\langle \tilde{\tilde{\mathbf b}}^\dagger \tilde{\tilde{\mathbf b}}\rangle=
+\frac{w_{11}^2 }{e^{\Theta_+}-1} +  \frac{|w_{12}|^2 }{e^{\Theta_-}-1}.
+\label{model3.1.3_ocupation_number}
+\end{equation}
+
+donde 
+
+\begin{eqnarray*}
+   \Lambda &=&\sqrt{|\mu|^2 + (\beta_1-\beta_2)^2/4}=\frac{|\beta_1(0)-\beta_2(0)|}{4},\\
+  \Theta_{\pm}&=& \frac{\beta_1+\beta_2}{2}\pm  \Lambda,\\
+  w_{12} &=& \frac{-\mu}{\sqrt{2 \Lambda(\Lambda + \frac{\beta_1-\beta_2}{2})}},\\
+  w_{11} &=&  \sqrt{1-|w_{12}|^2}.
+\end{eqnarray*}
+\end{frame}
+
+%frame26
+\begin{frame}{Evolución de un estado Gaussiano}
+    \begin{figure}
+        \centering
+        \includegraphics[scale=0.54]{model3.1.3_fig1.png}
+    \end{figure}
+%En la figura \ref{model3.1.3_fig1} se muestra del valor medio del observable número, ${\bf n}_1={\mathbf a}^\dagger{\mathbf a}$, \textit{vs.} el tiempo $t$, cotejando el resultado numérico con el resultado analítico obtenido anteriormente para un sistema resonante y no resonante.
+%\noindent Encontramos que efectivamente, los resultados son fidedignos entre sí, sirviendo esto como comprobación de la adecuidad de nuestro modelo
+\end{frame}
+
+%\subsection{Evolución Abierta}
+%frame27
+\begin{frame}{Evolución Abierta}
+
+Una estrategia usual para estimar la evolución del estado reducido de un subsistema sin considerar explícitamente el estado de su entorno es mediante el uso de ecuaciones maestras. La ecuación de Lindblad provee entonces una aproximación a la dinámica local asumiendo ciertas hipótesis sobre la dinámica del entorno, que garantizan que el sistema sigue una dinámica completamente positiva. 
+
+ \begin{align*}
+\frac{d\rho_A}{dt}=\frac{[{\bf H}_A-\Im(C) {\mathbf a}^\dagger {\mathbf a},\rho_A]}{{\bf i}\hbar }  \\
++\Re(C)  \bigg[
+  \langle {\mathbf b}^\dagger{\mathbf b}\rangle
+\bigg({\mathbf a} \rho_A{\mathbf a}^\dagger - \frac{\{{\mathbf a}^\dagger{\mathbf a},\rho_A\}}{2}\bigg)
++\langle {\mathbf b}{\mathbf b}^\dagger\rangle
+\bigg({\mathbf a}^\dagger \rho_A{\mathbf a} - \frac{\{{\mathbf a}{\mathbf a}^\dagger,\rho_A\}}{2}\bigg)
+\end{align*}
+
+con $C=\lambda \int_{0}^{\infty} e^{{\bf i} (\omega_A-\omega_B)s}ds$. 
+\end{frame}
+
+%frame28
+\begin{frame}{Evolución Abierta}
+Naturalmente, esta integral no converge. Sin embargo, podemos regularizar esta cantidad introduciendo un tiempo de correlación $\tau$, y remplazando ${\cal C}$ por
+$${\cal C}_\tau=\lambda\int_{0}^{\infty} e^{({\bf i} (\omega_A-\omega_B)-1/\tau) s}ds=\lambda\tau\frac{1+{\bf i}(\omega_A-\omega_B)\tau}{1+(\omega_A-\omega_B)^2\tau^2}$$
+Podemos entender a $\tau$ como una escala de tiempo en la que el entorno pierde sus correlaciones, bien porque está acoplado a un sistema externo, bien porque lo observamos.
+\end{frame}
+
+%frame29
+
+\begin{frame}{{Evolución Abierta}}
+    \begin{figure}
+        \centering
+        \includegraphics[scale=0.52]{model3.1.3_lindblad-vs-exact.png}
+    \end{figure}
+%En todo caso, vemos que el sistema relaja luego de un tiempo - que depende del parámetro de regularización $\tau$ - a un estado en que el número de partículas de ambos sistemas es el mismo, comportamiento bastante diferente al que obtuvimos de la evolución exacta. Notamos sin embargo que para tiempos grandes, en el caso resonante, la ocupación predicha por Lindblad converge al promedio temporal de la ocupación predicha por el modelo exacto.
+\end{frame}
+
+%frame30
+\section{Formalismo Max-Ent}
+\begin{frame}{Validez de la Aplicación Markoviana}
+
+Anteriormente se estudió la evolución abierta
+del estado reducido de un modo bosónico mediante el uso de la ecuaci\'on maestra de Lindblad caracterizado por los t\'erminos de colapso que este induce; obteniendo resultados diferentes a la solución exacta. 
+
+%Al haber hecho uso de la ecuación de Lindblad, implícitamente se asumió la Markovianidad del sistema. Luego de completar los cálculos se encontró que la ecuación de Lindblad no devuelve resultados fidedignos con la dinámica exacta puesto que, acorde al formalismo de Lindblad, el sistema relaja a un estado en el que el número de partículas de ambos sistemas es el mismo, lo cual no se condice con los resultados de la evolución exacta. 
+
+Esto se debe a que la aproximación Markoviana implementada no tiene en cuenta las correlaciones generadas durante la evolución. 
+
+Un nuevo formalismo consiste en una  \textbf{Gaussianización} basada en la propiedad \textbf{Max-Ent}.
+\end{frame}
+
+%frame31 
+\begin{frame}{Gaussianizaci\'on y el principio Max-Ent}
+    
+La ventaja de las dinámicas Gaussianas radica en la reducción de la complejidad de un problema $\mathcal{O}(2^n)$ en un problema donde se han de especificar únicamente ciertos parámetros del estado Gaussiano, un problema $\mathcal{O}(n^2)$. 
+
+Sin embargo este formalismo tiene sus límites y se vuelve inaplicable en el régimen de altas temperaturas y correlaciones grandes 
+
+%puesto que los mapeos bosónicos implementados dejan de ser fidedignos al problema original.
+
+Este nuevo formalismo que usaremos para aproximar al estado exacto de un sistema evolucionado se basa en que los estados Gaussianos son estados Max-Ent con correlaciones de pares
+
+%, por lo que siempre será posible aproximar al estado del sistema sin recurrir explícitamente al mapeo bosónico, trabajando directamente sobre dichos
+parámetros.
+\end{frame}
+
+%frame32
+\begin{frame}{Principio Max-Ent}
+
+La propiedad Max-Ent establece que, si se desconoce información sobre el sistema, el estado del sistema está representado por aquel que maximice la entropía de von-Neumann para valores medios fijos de ciertos observables.  
+¿Cómo lo calculamos?
+\end{frame}
+
+%frame33
+\begin{frame}{Principio Max-Ent}
+    Hay dos definiciones alternativas
+    \begin{itemize}[<+->]
+    \item Una primera definición es
+        
+        $$\rho\approx \rho_{ME} = {arg}\max_{{ Tr}\sigma {\bf O}_i =\langle  O_i\rangle} S(\sigma).$$
+        
+    \item Una definición alternativa en términos de la entropía relativa es 
+        
+    \begin{equation}
+   \rho \approx \rho_{ME} = \min_{\atop{\sigma \in     \mathcal{G}\{{\bf O}_i\}}} S(\rho || \sigma) =  \rho_{ME} \bigg|_{\langle {\bf O}_i\rangle = \langle {\bf O}_i\rangle_{\rho}},   
+    \label{max-ent_def2}
+    \end{equation}
+        \end{itemize}
+\end{frame}
+
+%frame34
+\begin{frame}{Dinámicas Max-Ent y Proy. Ortogonal}
+    \begin{figure}
+        \centering
+        \includegraphics[scale=0.22]{aprox-ME1_page-0001.jpg}
+    \end{figure}
+\end{frame}
+
+%frame36
+\begin{frame}{Dinámicas Max-Ent y Proy. Ortogonal}
+
+\begin{figure}
+    \centering
+    \includegraphics[scale=0.22]{aprox-ME2_page-0002.jpg}
+\end{figure}
+\end{frame}
+
+%frame37
+\begin{frame}{Dinámicas Max-Ent y Proy. Ortogonal}
+    \begin{figure}
+        \centering
+        \includegraphics[scale=0.37]{aprox-ME3_page-0003.jpg}
+    \end{figure}
+\end{frame}
+
+%frame38
+\begin{frame}{Dinámicas Max-Ent y Proy. Ortogonal}
+
+Para los cálculos de este trabajo usaremos el lenguaje \textbf{Python}, en particular usaremos las librerías numéricas
+    
+    \begin{itemize}
+        \item \textbf{Qutip}
+        \item \textbf{Matplotlib}
+        \item \textbf{Numpy}
+        \item \textbf{Scipy.optimize}
+    \end{itemize}
+entre otros.
+\end{frame}
+
+%frame38.bis
+\begin{frame}{Dinámicas Max-Ent y Proy. Ortogonal}
+En síntesis
+
+\begin{itemize}[<+->] 
+    \item En la rutina numérica de \textbf{Max-Ent restringido de un cuerpo}, dispondremos de una base de $n$ operadores para construir dicho estado gaussiano mientras que en la rutina \textbf{Max-Ent restringida de dos cuerpos} dispondremos de una base de $n$ operadores de un subsistema y una base de $m$ operadores del otro subsistema. 
+    %Mediante el paquete \textbf{scipy.optimize} podremos computar el estado Max-Ent al minimizar la entropía relativa respecto al estado exacto del sistema. 
+    \item Finalmente, el tercer protocolo y cuarto protocolo se basan en el \textbf{procedimiento de proyección} en uno y dos cuerpos respectivamente. En estas rutinas, se busca minimizar la distancia mientras continuamente actualizamos el estado que lo pondera. 
+    \end{itemize}
+\end{frame}
+
+\section{Aplicaciones}
+%frame39
+\begin{frame}{Sistemas estudiados}
+
+\begin{figure}
+    \centering
+    \includegraphics[scale=0.5]{fig_models-cap5.png}
+\end{figure}
+\end{frame}
+
+%frame40
+\subsection{Sistema de dos bosones}
+\begin{frame}{Truncamiento}
+
+La dinámica de un sistema de dos modos bosónicos que inicialmente se encuentran en un estado gaussiano
+%, y cuya evolución está gobernada por un Hamiltoniano cuadrático en los operadores de subida y bajada 
+es una dinámica Gaussiana
+%por lo que el estado del sistema estará contenido en todo momento dentro de la variedad de estados Max-Ent asociados a observables cuadráticos. 
+La situación cambia si ahora consideramos un sistema análogo, pero en el que truncamos la dimensión del espacio de ambos modos a dimensión finita:
+
+\begin{align}
+{\bf a}_{i}\rightarrow {\bf a}^{N}_{i}=\sum_{n=0}^{N-1}\sqrt{n}|n\rangle_i \langle n+1|_i \\
+{\bf b}_{i}\rightarrow {\bf b}^{N}_{j}=\sum_{m=0}^{N-1}\sqrt{m}|m\rangle_j \langle m+1|_j
+\end{align}
+
+donde se han de realizar las identificaciones ${\bf H}\rightarrow  {\bf H}={ \bf H}_1 + { \bf H}_2 + \lambda {\bf V}$
+con ${\bf V}={\bf a}^{N\dagger}{\bf b}^{N}+{\bf b}^{N\dagger}{\bf a}^{N}$ y
+${\bf H}_i=\sum_{k=0}^{N}\omega_i \bigg(n+\frac{1}{2}\bigg)|n \rangle_i\langle n|_i$,
+
+%siendo $\alpha$ la constante de acoplamiento y siendo $\omega_i$ la frecuencia del $i$-ésimo modo de oscilación.
+
+%Sin embargo, en este caso aún podemos definir una variedad Riemanniana MaxEnt de estados asociados a los observables  $\{{\bf H}_1,{\bf H}_2,{\bf b}^{N\dagger}{\bf a}^{N},{\bf a}^{N\dagger}{\bf b}^{N}\}$, y forzar la dinámica sobre esta variedad mediante las dinámicas restringidas Max-Ent. 
+
+%Es importante destacar que este procedimiento de truncado de sistemas bosónicos a dimensión finita hará que las dinámicas estudiadas no sean gaussianas y consecuentemente se perderá exactitud en las aproximaciones usadas. 
+\end{frame}
+
+%\subsubsection{Evolución Gaussiana Abierta}
+
+%frame41
+\begin{frame}{Evolución Abierta no resonante}
+En esta sección estudiaremos la dinámica abierta no resonante de un estado cuasi-gaussiano dado por 
+
+$$
+\rho_{AB}(0) = e^{-0.05{\bf a}^{N\dagger} {\bf a}^{N}} \otimes e^{-0.05{\bf b}^{N\dagger} {\bf b}^{N}}
+$$
+
+donde se han tomado 
+
+\begin{itemize}
+    \item con operadores de colapso bosónicos  ${\bf C}_1 = {\bf a}^{N}$, ${\bf C}_2 = {\bf a}^{N\dagger}$ con factores $\gamma_1 = 0.1$, $\gamma_2 = 2 \gamma_1$,
+    \item se han tomado las dimensiones de truncamiento iniciales dim1=dim2=10,
+    \item $\omega_1 = 3.0$, $\omega_2 = \sqrt{48}$
+    \item y un acoplamiento $\lambda = 0.05$.
+\end{itemize}
+\end{frame}
+
+%frame42
+\begin{frame}{Evolución Gaussiana Abierta}
+\begin{figure}
+    \centering
+    \includegraphics[scale=0.6]{figs_results/bxb_open_nr_cg/rel_entropy_open_nonres_ng.png}
+\end{figure}
+\end{frame}
+
+%frame43
+\begin{frame}{Evolución Gaussiana Abierta}
+    \begin{figure}
+\begin{minipage}{.5\linewidth}
+\centering
+\subfloat[]{\label{main:a}\includegraphics[scale=.45]{figs_results/bxb_open_nr_cg/b5xb10_open_nonres_g.png}}
+\end{minipage}%
+\begin{minipage}{.5\linewidth}
+\centering
+\subfloat[]{\label{main:b}\includegraphics[scale=.45]{figs_results/bxb_open_nr_cg/b10xb5_open_nonres_g.png}}
+\end{minipage}\par\medskip
+\centering
+\subfloat[]{\label{main:c}\includegraphics[scale=.45]{figs_results/bxb_open_nr_cg/b15xb15_open_nonres_g.png}}
+\end{figure}
+\end{frame}
+
+%frame44
+\begin{frame}{Evolución Gaussiana Abierta}
+    \begin{figure}
+    \centering
+    \subfloat[\centering]{\includegraphics[scale=0.37]{figs_results/bxb_open_nr_cg/n1_ocupation_number_open_nonres_ng.png}}
+    \subfloat[\centering]{\includegraphics[scale=0.37]{figs_results/bxb_open_nr_cg/n2_ocupation_number_open_nonres_ng.png}}
+\end{figure}
+\end{frame}
+
+%\subsubsection{Evolución no Gaussiana Cerrada}
+%frame45
+\begin{frame}{Evolución no Gaussiana Cerrada}
+
+¿Cómo podemos obtener una dinámica no gaussiana?
+
+\begin{itemize}
+    \item Estado no gaussiano: aparte de términos cuadráticos, ${\bf K}(0)$ involucra términos de orden n-cuerpos.
+%tratable por Wick y teoría perturbativa 
+    \item Hamiltoniano no gaussiano: en este caso $[{\bf H}, {\bf K}(0)_m] \neq 0$ por lo que hay contribuciones de $m'>m$ factores y el estado no es un $n$-cuerpo.
+%tratable por teoría perturbativa
+%por lo que el estado no está determinado por un n-cuerpo con correlaciones de n-cuerpos finitas.     
+%  If the Hamiltonian is not Gaussian, then the commutator of ${\bf H}$ with $m$ factor term in ${\bf K}$ results in contributions with $m'>m$ factors, and hence, the state is not determined by a $n-$body correlations with $n$ finite anymore.
+\end{itemize}
+\end{frame}
+
+%frame45.bis
+\begin{frame}{Evolución no Gaussiana Cerrada}
+
+En general, para dinámicas no gaussianas
+\begin{itemize}[<+->]
+    \item No hay una decomposición unívoca en parte gaussiana y parte no gaussiana.
+    \item Mediante un tratamiento perturbativo, no se asegura la convergencia a largos plazos.
+    \item Al incluir múltiples componentes, el cálculo analítico se vuelve complejo para sistemas no bosónicos, donde ya no es válido el uso del teorema de Wick.
+\end{itemize}
+\end{frame}
+%frame45.tris
+\begin{frame}{Evolución no Gaussiana Cerrada}
+
+Empezamos considerando un estado no gaussiano a una temperatura de forma tal que el número de ocupación bosónico del primer subsistema sea del orden de 5 estados. El estado a evolucionar será
+
+\begin{equation}
+    \rho_{AB}(0) = e^{-0.08{\bf a}^{N\dagger} {\bf a}^{N}} \otimes \mathds{1}_{dim2}. \label{low_temp_state}
+\end{equation}
+
+donde se han tomado: 
+\begin{itemize}
+    \item dimensiones de truncamiento iniciales dim1=dim2=10,
+    \item frecuencias $\omega_1 = 3.0$, $\omega_2 = \sqrt{48}$
+    \item y un acoplamiento $\lambda = 0.05$.
+\end{itemize}
+\end{frame}
+
+%frame46
+\begin{frame}{Evolución no Gaussiana Cerrada}
+    \begin{figure}
+    \centering
+    \includegraphics[scale=0.6]{figs_results/bxb_closed_nr_cng/bxb_low_closed_nr_rel-entropy.png}
+\end{figure}
+\end{frame}
+
+%frame47
+\begin{frame}{Evolución no Gaussiana Cerrada}
+    \begin{figure}
+\begin{minipage}{.5\linewidth}
+\centering
+\subfloat[]{\label{main:a}\includegraphics[scale=.45]{figs_results/bxb_closed_nr_cng/b5xb10_nonres_ng.png}}
+\end{minipage}%
+\begin{minipage}{.5\linewidth}
+\centering
+\subfloat[]{\label{main:b}\includegraphics[scale=.45]{figs_results/bxb_open_nr_cg/b10xb5_open_nonres_g.png}}
+\end{minipage}\par\medskip
+\centering
+\subfloat[]{\includegraphics[scale=.45]{figs_results/bxb_open_nr_cg/b15xb15_open_nonres_g.png}}
+\end{figure}
+\end{frame}
+
+%frame48
+\begin{frame}{Evolución no Gaussiana Cerrada}
+    \begin{figure}
+    \centering
+    \subfloat[\centering]{\includegraphics[scale=0.4]{figs_results/bxb_closed_nr_cng/bxb_low_closed_nr_n1.jpeg}}
+    \subfloat[\centering]{\includegraphics[scale=0.4]{figs_results/bxb_closed_nr_cng/bxb_low_closed_nr_n2.jpeg}}
+\end{figure}
+\end{frame}
+
+%frame49
+\subsection{Modelo de Dicke simplificado}
+\begin{frame}{Modelo de Dicke simplificado}
+
+El modelo de Dicke simplificado es un sistema con un acoplamiento bosón-spín, cuyo hamiltoniano está regido 
+
+\begin{equation}
+    \mathbf{H}_D = \omega_a {\bf a}^{\dagger}{\bf a} + \Omega \sigma_z + \lambda {\bf S}_z \frac{{\bf a}^{\dagger}+{\bf a}}{2}.
+\end{equation}
+
+Acorde a la aproximación de onda rotante, el Hamiltoniano de interacción que resultará es
+ 
+\begin{equation}
+    \mathbf{H}_I = \lambda {\bf S}_z\frac{e^{{\bf i}\omega t}{\bf a}^{\dagger}+e^{-{\bf i}\omega t}{\bf a}}{2}.
+\end{equation}
+
+\end{frame}
+%frame50
+%\subsubsection{Evolución Gaussiana}
+\begin{frame}{Evolución Gaussiana}
+
+Se tomará un estado cuasi-gaussiano 
+
+    \begin{equation}
+    \rho = e^{-\mathbf{K}_1}, \textnormal{ donde } \mathbf{K} = -(\mathbf{K}_{bos,1} \mathds{1}_2 + \mathbf{K}_{bos,2}\sigma_z) 
+\end{equation}
+
+donde 
+\begin{itemize}
+    \item $\mathbf{K}_{bos,i}= \beta_{i}{\bf a}^{N\dagger}{\bf a}^{N} + \psi_i$
+    \item $\sigma_{\mu}=(\mathds{1}_2, \sigma)$. 
+    \item Se tomaron operadores de colapso bosónicos, ${\bf C}_1 = {\bf a}^{N}$ y ${\bf C}_2 = {\bf a}^{N\dagger}$ con factores de colapso $\gamma_1 = 0.005$, $\gamma_2 = 0.01$,
+    \item frecuencias $\omega_1 = 3$ y $\omega_2 = \sqrt{48}$
+    \item y una constante de acoplamiento $\lambda = 0.05$.
+\end{itemize}
+\end{frame}
+
+%frame51
+\begin{frame}{Evolución Gaussiana}
+\begin{figure}
+    \centering
+    \includegraphics[scale=0.6]{figs_results/section5_bxs-open-nonres/rel_entropy_bxs_nonres.png}
+\end{figure}
+\end{frame}
+
+%frame52
+\begin{frame}{Evolución Gaussiana}
+    \begin{figure}
+\begin{minipage}{.5\linewidth}
+\centering
+\subfloat[]{\label{main:a}\includegraphics[scale=.45]{figs_results/section5_bxs-open-nonres/b10xs_nonres_g.png}}
+\end{minipage}%
+\begin{minipage}{.5\linewidth}
+\centering
+\subfloat[]{\label{main:b}\includegraphics[scale=.45]{figs_results/section5_bxs-open-nonres/b20xs_nonres_g.png}}
+\end{minipage}\par\medskip
+\centering
+\subfloat[]{\includegraphics[scale=.30]{figs_results/section5_bxs-open-nonres/b30xs_nonres_g.png}}
+\end{figure}
+\end{frame}
+
+%frame53
+\begin{frame}{Evolución Gaussiana}
+     \begin{figure}
+    \centering
+    \subfloat[\centering]{\includegraphics[scale=0.4]{figs_results/section5_bxs-open-nonres/expectation_value_n1_bxs_nonres.png}}
+    \subfloat[\centering]{\includegraphics[scale=0.4]{figs_results/section5_bxs-open-nonres/expectation_value_n2_bxs_nonres.png}}
+\end{figure}
+\end{frame}
+
+%frame54 
+%\subsubsection{Evolución no Gaussiana}
+\begin{frame}{Evolución no Gaussiana}
+
+Ahora tomaremos un estado cuasi-gaussiano pero cuya evolución será no gaussiana
+    \begin{equation}
+    \rho_{ng}= e^{-\mathbf{K}_{ng}}, \textnormal { donde } \mathbf{K}_{ng} = \sum_{\mu} \bigg(\alpha_{\mu}{\bf a}^{N\dagger}{\bf a}^{N} + \zeta_{\mu}{\bf a}^{N} + \zeta_{\mu}^{*}{\bf a}^{N\dagger} + \phi_{\mu}\bigg) \sigma_{\mu}.
+\end{equation}
+
+\begin{itemize}
+    \item Se tomaron operadores de colapso bosónicos, ${\bf C}_1 = {\bf a}^{N}$ y ${\bf C}_2 = {\bf a}^{N\dagger}$ con factores de colapso $\gamma_1 = 0.005$, $\gamma_2 = 0.01$,
+    \item frecuencias $\omega_1 = 3$ y $\omega_2 = \sqrt{48}$
+    \item  una constante de acoplamiento $\lambda = 0.05$.
+\end{itemize}
+\end{frame}
+
+%frame55
+\begin{frame}{Evolución no Gaussiana}
+    \begin{figure}
+    \centering
+    \includegraphics[scale=0.6]{figs_results/section5_bxs_ng/rel_entropy_open_nonres_ng.png}
+\end{figure}
+\end{frame}
+
+%frame56
+\begin{frame}{Evolución no Gaussiana}
+    \begin{figure}
+\begin{minipage}{.5\linewidth}
+\centering
+\subfloat[]{\label{main:a}\includegraphics[scale=.45]{figs_results/section5_bxs_ng/b10xs_nonres_ng.png}}
+\end{minipage}%
+\begin{minipage}{.5\linewidth}
+\centering
+\subfloat[]{\label{main:b}\includegraphics[scale=.45]{figs_results/section5_bxs_ng/b20xs_nonres_ng.png}}
+\end{minipage}\par\medskip
+\centering
+\subfloat[]{\label{main:c}\includegraphics[scale=.45]{figs_results/section5_bxs_ng/b20xs_nonres_ng.png}}
+\end{figure}
+\end{frame}
+
+%frame57
+\begin{frame}{Evolución no Gaussiana}
+     \begin{figure}
+    \centering
+    \subfloat[\centering]{\includegraphics[scale=0.4]{figs_results/bxb_open_nr_cg/n1_ocupation_number_open_nonres_ng.png}}
+    \subfloat[\centering]{\includegraphics[scale=0.4]{figs_results/section5_bxs_ng/sigmaz_open_nonres_ng.png}}
+\end{figure}
+\end{frame}
+
+%frame58
+\section{Conclusiones}
+\begin{frame}{Conclusiones}
+
+\begin{itemize}[<+->]
+    \item Se estudió la evolución cerrada un sistema de dos bosones mediante el formalismo de dinámicas gaussianas
+    \item Se estudió la evolución abierta markoviana de dicho sistema hallando resultados incorrectos.
+    \item Se desarrollaron aproximaciones no markovianas basadas en Max-Ent: dinámicas restringidas y Proyección Ortogonal
+    \item Se encontró que dichos formalismos son aplicables a describir sistemas bosónicos como también sistemas bosón-espín, incluso en situaciones extremas
+\end{itemize}
+\end{frame}
+
+%frame59
+\subsection{Planes a futuro}
+\begin{frame}{Planes a futuro}
+\begin{itemize}[<+->]
+    \item Se buscará aplicar estos formalismo para modelar la dinámica de sistemas de espines con interacciones de corto alcance, fermiones en una red y gases de bosones,
+    \item Otros sistemas que involucren dinámicas no markovianas
+    \item Derivar una ecuación maestra directamente en términos de las correlaciones de pares. 
+\end{itemize}
+\end{frame}
+\end{document}
